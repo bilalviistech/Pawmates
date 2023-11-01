@@ -57,7 +57,7 @@ router.post('/add-pet', upload.array('images', 5),async (req,res,next)=>{
 
             await newPet.save();
 
-            res.status(201).json({
+            res.status(200).json({
                 message: "Pet Added Successfully."
             });
         }

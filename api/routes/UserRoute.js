@@ -37,7 +37,7 @@ router.post('/register',async (req,res,next)=>{
 
             await newUser.save();
 
-            res.status(201).json({
+            res.status(200).json({
                 message: "User Created"
             });
         }
@@ -55,7 +55,7 @@ router.post('/login', (req,res,next)=>{
     .exec()
     .then(user=>{
         if(user.length < 1){
-            return res.status(401).json({
+            return res.status(404).json({
                 message: "User Not Found"
             })
         }
