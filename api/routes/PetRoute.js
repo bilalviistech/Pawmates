@@ -35,6 +35,7 @@ router.post('/add-pet', upload.array('images', 5),async (req,res,next)=>{
         {
             res.status(404).json
             ({
+                success:"false",
                 message: "User not found."
             });
         }
@@ -58,6 +59,7 @@ router.post('/add-pet', upload.array('images', 5),async (req,res,next)=>{
             await newPet.save();
 
             res.status(200).json({
+                success:"true",
                 message: "Pet Added Successfully."
             });
         }
@@ -82,12 +84,16 @@ router.get('/search-pet', async (req, res, next) => {
         if (existingPets.length === 0)
         {
             return res.status(404).json({
+                success:"false",
                 message: "No pets found."
             });
         }
   
         // Return the found pets
-        res.status(200).json(existingPets);
+        res.status(200).json({
+            success:"true",
+            data :existingPets
+        });
     } 
     
     catch (err) 

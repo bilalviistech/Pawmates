@@ -19,6 +19,7 @@ router.post('/register',async (req,res,next)=>{
         if (existingUser) 
         {
             res.status(201).json({
+                success:"false",
                 message: "Email Already Exists."
             });
         }
@@ -38,6 +39,7 @@ router.post('/register',async (req,res,next)=>{
             await newUser.save();
 
             res.status(200).json({
+                success:"true",
                 message: "User Created"
             });
         }
@@ -56,6 +58,7 @@ router.post('/login', (req,res,next)=>{
     .then(user=>{
         if(user.length < 1){
             return res.status(404).json({
+                success:"false",
                 message: "User Not Found"
             })
         }
@@ -82,7 +85,8 @@ router.post('/login', (req,res,next)=>{
             }
             else{
                 return res.status(401).json({
-                    msg:"Password Doesn't Macth"
+                    success:"false",
+                    message:"Password Doesn't Match"
                 })
             }
         })
@@ -102,6 +106,7 @@ router.post('/change-password', async (req,res,next)=>{
     const hash = await bcrypt.hash(req.body.password, salt);
     if(!hash){
         res.status(404).json({
+            success:"false",
             message: "Password Field Must Be Added"
         })
     }
@@ -111,6 +116,7 @@ router.post('/change-password', async (req,res,next)=>{
                 $set:{password:hash}
             })
         res.status(200).json({
+            success:"true",
             message: "Password Has Been Changed"
         })
     }
@@ -150,13 +156,13 @@ router.post('/email-verification', async (req, res) => {
                 if (error) {
                     console.error(error);
                     res.send({ 
-                        status: 'Failed',
+                        success:"false",
                         message: 'Failed To Send OTP'
                     });
                 } else {
                     console.log('Email sent: ' + info.response);
                     res.send({
-                        status: 'Success',
+                        success:"true",
                         message: 'OTP Sent Successfully',
                         id : user_email?._id,
                         "OTP Code" : otp
@@ -166,15 +172,15 @@ router.post('/email-verification', async (req, res) => {
 
         } else {
             res.send({
-                "status": "Failed",
-                "message": "Email Does Not Exist"
+                success:"false",
+                message: "Email Does Not Exist"
             })
 
         }
     } else {
         res.send({
-            "status": "Failed",
-            "message": "Please Enter Your Correct Email"
+            success:"false",
+            message: "Please Enter Your Correct Email"
         })
 
     }
@@ -187,14 +193,16 @@ router.post('/verify-otp',async (req,res,next)=>{
     const otpData = await OTP.findOne({ userId: id, otpCode: otp });
 
         if(otpData){
-            res.send({"success": true,
-            "message": "Otp Verified Successfully"
+            res.send({
+            success: "true",
+            message: "Otp Verified Successfully"
         })
         }
         
         else{
-            res.send({"success": false,
-            "message": "Invalid Otp"
+            res.send({
+            success: "false",
+            message: "Invalid Otp"
         })
 
         }
