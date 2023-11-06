@@ -99,8 +99,8 @@ router.post('/login', (req,res,next)=>{
 })
 
 // User Change Password Using Auth Token
-router.use('/change-password',auth)
-router.post('/change-password', async (req,res,next)=>{
+router.use('/update-password',auth)
+router.post('/update-password', async (req,res,next)=>{
     const {password} = req.body
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(req.body.password, salt);
@@ -125,7 +125,6 @@ router.post('/change-password', async (req,res,next)=>{
 // User Verification Code Sent To Email
 router.post('/email-verification', async (req, res) => {
     const { email } = req.body;
-    
     if (email) {
         const user_email = await user.findOne({ email: email })
         if (user_email) {
@@ -145,7 +144,6 @@ router.post('/email-verification', async (req, res) => {
                     pass: 'bomuubtkvclgvacn',
                 },
             });
-            
             const mailOptions = {
                 from: 'visstechapps@gmail.com',
                 to: email,
@@ -191,7 +189,6 @@ router.post('/verify-otp',async (req,res,next)=>{
     const {otp, id} = req.body;
 
     const otpData = await OTP.findOne({ userId: id, otpCode: otp });
-
         if(otpData){
             res.send({
             success: "true",
@@ -206,6 +203,28 @@ router.post('/verify-otp',async (req,res,next)=>{
         })
 
         }
+})
+router.post('/change-password',async (req,res,next)=>{
+    const {password, id} = req.body
+    const saltt = await bcrypt.genSalt(10);
+    
+    const hashed = await bcrypt.hash(password, saltt);
+    if(!hashed){
+        res.status(404).json({
+            success:"false",
+            message: "Password Field Must Be Added"
+        })
+    }
+    else{
+        const check = await user.findByIdAndUpdate(id,
+            {
+                $set:{password:hashed}
+            })
+        res.status(200).json({
+            success:"true",
+            message: "Password Has Been Changed"
+        })
+    }
 })
 
 module.exports = router
