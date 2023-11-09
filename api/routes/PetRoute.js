@@ -33,7 +33,7 @@ router.post('/add-pet', upload.array('images', 5),async (req,res,next)=>{
         const existingUser = await user.findOne({ _id: req.body.user_id });
         if (!existingUser) 
         {
-            res.status(404).json
+            res.status(200).json
             ({
                 success:"false",
                 message: "User not found."
@@ -83,7 +83,7 @@ router.get('/search-pet', async (req, res, next) => {
       
         if (existingPets.length === 0)
         {
-            return res.status(404).json({
+            return res.status(200).json({
                 success:"false",
                 message: "No pets found."
             });
