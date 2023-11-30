@@ -3,6 +3,7 @@ const router = express.Router()
 const mongoose =  require('mongoose')
 const user = require('../models/user.js')
 const pet = require('../models/pet.js')
+const petrequest = require('../models/petrequest.js')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const OTP = require ("../models/opt.js")
@@ -12,6 +13,7 @@ const auth = require('../../middlewares/auth-middleware.js')
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+// const basePath = path.resolve(__dirname);
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -30,7 +32,7 @@ router.use('/add-pet',auth)
 router.post('/add-pet', upload.array('images', 5),async (req,res,next)=>{
     try 
     {
-        const existingUser = await user.findOne({ _id: req.body.user_id });
+        const existingUser = await user.findOne({ _id: req.user._id });
         if (!existingUser) 
         {
             res.status(200).json
@@ -45,10 +47,15 @@ router.post('/add-pet', upload.array('images', 5),async (req,res,next)=>{
             
             const newPet = new pet({
                 _id: new mongoose.Types.ObjectId(),
-                user_id:req.body.user_id,
-                dob: req.body.dob,
+                pet_owner_id:existingUser._id,
                 cat_name : req.body.cat_name,
-                pet_name : req.body.pet_name,
+                pet_type : req.body.pet_type,
+                pet_nickname : req.body.pet_nickname,
+                pet_purpose_type : req.body.pet_purpose_type,
+                pet_address : req.body.pet_address,
+                pet_drop_off : req.body.pet_drop_off,
+                pet_pick_up : req.body.pet_pick_up,
+                pet_size : req.body.pet_size,
                 gender: req.body.gender,
                 breed : req.body.breed,
                 age : req.body.age,
@@ -74,8 +81,8 @@ router.post('/add-pet', upload.array('images', 5),async (req,res,next)=>{
 })
 
 //Search Pet
-router.use('/search-pet',auth)
-router.get('/search-pet', async (req, res, next) => {
+router.use('/seearch-pet',auth)
+router.get('/seearch-pet', async (req, res, next) => {
     try 
     {
         const { cat_name, pet_name } = req.body;
@@ -104,5 +111,98 @@ router.get('/search-pet', async (req, res, next) => {
         });
     }
 });
+
+router.use('/getall-pet',auth)
+router.get('/getall-pet', async(req,res,next)=>{
+    const allPet = await pet.find()
+    res.status(200).json({
+        success:true,
+        data:allPet
+    })
+})
+
+router.use('/search-pet',auth)
+router.get('/search-pet', async(req,res,next)=>{
+    const {category_name,pet_name_type,pet_purpose_type} = req.body;
+    if(category_name && pet_name_type && pet_purpose_type)
+    {
+        var search_pet = await pet.find({cat_name:category_name,pet_type:pet_name_type,pet_purpose_type:pet_purpose_type})
+        if(search_pet.length > 0)
+        {
+            res.status(200).json({
+                success:true,
+                data:search_pet
+            })
+        }
+
+        else
+        {
+            res.status(200).json({
+                success:false,
+                message:"No Pets Found."
+            })
+        }
+    }
+
+    else if(category_name && pet_name_type)
+    {
+        var search_pet = await pet.find({cat_name:category_name,pet_type:pet_name_type})
+        if(search_pet.length > 0)
+        {
+            res.status(200).json({
+                success:true,
+                data:search_pet
+            })
+        }
+
+        else
+        {
+            res.status(200).json({
+                success:false,
+                message:"No Pets Found."
+            })
+        }
+    }
+
+    else if(category_name)
+    {
+        var search_pet = await pet.find({cat_name:category_name})
+        if(search_pet.length > 0)
+        {
+            res.status(200).json({
+                success:true,
+                data:search_pet
+            })
+        }
+
+        else
+        {
+            res.status(200).json({
+                success:false,
+                message:"No Pets Found."
+            })
+        }
+    }
+
+    else if(pet_name_type || pet_purpose_type)
+    {
+        var search_pet = await pet.find({$or: [{ cat_name:category_name }, { pet_type:pet_name_type }, {pet_purpose_type:pet_purpose_type} ]})
+        if(search_pet.length > 0)
+        {
+            res.status(200).json({
+                success:true,
+                data:search_pet
+            })
+        }
+
+        else
+        {
+            res.status(200).json({
+                success:false,
+                message:"No Pets Found."
+            })
+        }
+    }
+})
 
 module.exports = router

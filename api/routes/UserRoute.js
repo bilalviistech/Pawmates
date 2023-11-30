@@ -8,6 +8,19 @@ const OTP = require ("../models/opt.js")
 const nodemailer = require ('nodemailer')
 const dotenv = require('dotenv').config({ path: '../../.env' });
 const auth = require('../../middlewares/auth-middleware.js')
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+  
+// Create multer upload instance
+const upload = multer({ storage: storage });
 
 // User Created
 router.post('/register',async (req,res,next)=>{
@@ -16,6 +29,7 @@ router.post('/register',async (req,res,next)=>{
     try 
     {
         const existingUser = await user.findOne({ email: check_email });
+        const {user_type} = req.body;
         if (existingUser) 
         {
             res.status(200).json({
@@ -30,12 +44,10 @@ router.post('/register',async (req,res,next)=>{
 
             const newUser = new user({
                 _id: new mongoose.Types.ObjectId(),
-                name: req.body.name,
                 email: req.body.email,
                 password: hash,
-                user_type: req.body.user_type
+                user_type: req.body.user_type,
             });
-
             await newUser.save();
 
             res.status(200).json({
@@ -107,7 +119,7 @@ router.post('/update-password', async (req,res,next)=>{
     if(!hash){
         res.status(200).json({
             success:"false",
-            message: "Password Field Must Be Added"
+            message: "Password Field Must Be Added."
         })
     }
     else{
@@ -117,7 +129,7 @@ router.post('/update-password', async (req,res,next)=>{
             })
         res.status(200).json({
             success:"true",
-            message: "Password Has Been Changed"
+            message: "Password Has Been Changed."
         })
     }
 })
@@ -155,13 +167,13 @@ router.post('/email-verification', async (req, res) => {
                     console.error(error);
                     res.send({ 
                         success:"false",
-                        message: 'Failed To Send OTP'
+                        message: 'Failed To Send OTP.'
                     });
                 } else {
                     console.log('Email sent: ' + info.response);
                     res.send({
                         success:"true",
-                        message: 'OTP Sent Successfully',
+                        message: 'OTP Sent Successfully.',
                         id : user_email?._id,
                         "OTP Code" : otp
                     });
@@ -171,14 +183,14 @@ router.post('/email-verification', async (req, res) => {
         } else {
             res.send({
                 success:"false",
-                message: "Email Does Not Exist"
+                message: "Email Does Not Exist."
             })
 
         }
     } else {
         res.send({
             success:"false",
-            message: "Please Enter Your Correct Email"
+            message: "Please Enter Your Correct Email."
         })
 
     }
@@ -192,18 +204,19 @@ router.post('/verify-otp',async (req,res,next)=>{
         if(otpData){
             res.send({
             success: "true",
-            message: "Otp Verified Successfully"
+            message: "Otp Verified Successfully."
         })
         }
         
         else{
             res.send({
             success: "false",
-            message: "Invalid Otp"
+            message: "Invalid Otp."
         })
 
         }
 })
+
 router.post('/change-password',async (req,res,next)=>{
     const {password, id} = req.body
     const saltt = await bcrypt.genSalt(10);
@@ -212,7 +225,7 @@ router.post('/change-password',async (req,res,next)=>{
     if(!hashed){
         res.status(200).json({
             success:"false",
-            message: "Password Field Must Be Added"
+            message: "Password Field Must Be Added."
         })
     }
     else{
@@ -222,9 +235,40 @@ router.post('/change-password',async (req,res,next)=>{
             })
         res.status(200).json({
             success:"true",
-            message: "Password Has Been Changed"
+            message: "Password Has Been Changed."
         })
     }
+})
+
+router.use('/update-info',auth)
+router.post('/update-info',upload.array('images', 5), async(req,res,next)=>{
+    const upadate_user = await user.findById(req.user._id)
+    if(upadate_user.user_type == "pet sitter")
+    {
+        const images = req.files.map(file => file.path);
+        const update_user = await user.findByIdAndUpdate(req.user._id,{
+            gender:req.body.gender,
+            first_name:req.body.first_name,
+            last_name:req.body.last_name,
+            lat:req.body.lat,
+            long:req.body.long,
+            age:req.body.age,   
+            images:images,
+            about:req.body.about
+        })
+        res.status(200).json({
+            success:true,
+            message: "Pet Sitter Information Added."
+        })
+    }
+
+    else{
+        res.status(200).json({
+            success:false,
+            message: "Your'e not a pett sitter."
+        })
+    }
+
 })
 
 module.exports = router
