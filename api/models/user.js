@@ -2,13 +2,6 @@ const mongoose = require('mongoose')
 
 const UserSchema = new mongoose.Schema({
     _id:mongoose.Schema.Types.ObjectId,
-    gender:String,
-    first_name:String,
-    last_name:String,
-    lat:String,
-    long:String,
-    age:String,
-    about:String,
     images:{
         type:Array,
         // required:true
@@ -24,6 +17,16 @@ const UserSchema = new mongoose.Schema({
     user_type:{
         enum: ['pet owner', 'pet sitter'],
         type:String,
+        required:true
+    },
+    pet_add_status:{
+        type:Number,
+        default:0,
+        required:true
+    },
+    petSitter_update_status:{
+        type:Number,
+        default:0,
         required:true
     },
 })

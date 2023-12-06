@@ -4,6 +4,7 @@ const mongoose =  require('mongoose')
 const user = require('../models/user.js')
 const pet = require('../models/pet.js')
 const petrequest = require('../models/petrequest.js')
+const petsitterdetail = require('../models/petsitter_detail.js')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const OTP = require ("../models/opt.js")
@@ -52,7 +53,13 @@ router.post('/add-pet', upload.array('images', 5),async (req,res,next)=>{
                 pet_type : req.body.pet_type,
                 pet_nickname : req.body.pet_nickname,
                 pet_purpose_type : req.body.pet_purpose_type,
-                pet_address : req.body.pet_address,
+                location:{
+                    type:"Point",
+                    coordinates:[
+                        parseFloat(req.body.longitude),
+                        parseFloat(req.body.latitude)
+                    ]
+                },
                 pet_drop_off : req.body.pet_drop_off,
                 pet_pick_up : req.body.pet_pick_up,
                 pet_size : req.body.pet_size,
@@ -65,6 +72,13 @@ router.post('/add-pet', upload.array('images', 5),async (req,res,next)=>{
 
             await newPet.save();
 
+            if(newPet)
+            {
+                await user.findByIdAndUpdate(newPet.pet_owner_id,{
+                    $set:{pet_add_status:1}
+                })
+            }
+
             res.status(200).json({
                 success:"true",
                 message: "Pet Added Successfully."
@@ -74,43 +88,14 @@ router.post('/add-pet', upload.array('images', 5),async (req,res,next)=>{
     
     catch (err) {
         console.error(err);
-        res.status(500).json({
-            error: err
+        res.status(200).json({
+            // error: err._message
+            success:false,
+            message: err.message
         });
     }
 })
 
-//Search Pet
-router.use('/seearch-pet',auth)
-router.get('/seearch-pet', async (req, res, next) => {
-    try 
-    {
-        const { cat_name, pet_name } = req.body;
-        const existingPets = await pet.find({ cat_name, pet_name });
-      
-        if (existingPets.length === 0)
-        {
-            return res.status(200).json({
-                success:"false",
-                message: "No pets found."
-            });
-        }
-  
-        // Return the found pets
-        res.status(200).json({
-            success:"true",
-            data :existingPets
-        });
-    } 
-    
-    catch (err) 
-    {
-        console.error(err);
-        res.status(500).json({
-            error: err.message
-        });
-    }
-});
 
 router.use('/getall-pet',auth)
 router.get('/getall-pet', async(req,res,next)=>{
@@ -204,5 +189,74 @@ router.get('/search-pet', async(req,res,next)=>{
         }
     }
 })
+
+// Search Pet-Sitter
+router.use('/search-pet-sitter',auth)
+router.get('/search-pet-sitter', async (req, res, next) => {
+    try 
+    {
+        const latitude = req.body.latitude;
+        const longitude = req.body.longitude;
+        const pet_category = req.body.pet_category;
+        const pet_service = req.body.pet_service;
+        const sitter_detail =  await petsitterdetail.find({petPurposeType:pet_service,categoryName:pet_category})
+        
+        if(sitter_detail.length > 0)
+        { 
+            const location = await petsitterdetail.aggregate([
+                {
+                    $geoNear:{
+                        near:{
+                            type:"Point",
+                            coordinates:[parseFloat(longitude),parseFloat(latitude)]
+                        },
+                        key:"location",
+                        maxDistance:parseFloat(0.8)*1609,
+                        // maxDistance:parseFloat(100000)*1609,
+                        distanceField:"dist.calculated",
+                        spherical:true
+                    }
+                },
+                {
+                    $match: {
+                        _id: { $in: sitter_detail.map(sitter => sitter._id) }
+                    }
+                }
+            ])
+            
+            if(location.length == 0)
+            {
+                res.status(200).json({
+                    success:true,
+                    message:"No Nearest Pet's Found."
+                })
+            }
+            else
+            {
+                res.status(200).json({
+                    success:true,
+                    message:location
+                })
+            }
+        }
+
+        else
+        {
+            res.status(200).json({
+                success:false,
+                message:"No Pet Sitter Found."
+            })
+        }
+    } 
+    
+    catch (err) 
+    {
+        console.error(err);
+        res.status(200).json({
+            success:false,
+            message: err.message
+        });
+    }
+});
 
 module.exports = router

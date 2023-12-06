@@ -65,8 +65,9 @@ router.post('/req-send', async (req, res, next) => {
     
     catch (err) {
         console.error(err);
-        res.status(500).json({
-            error: err.message
+        res.status(200).json({
+            success:false,
+            message: err.message
         });
     }
 });
@@ -97,9 +98,9 @@ router.get('/reqinfo_petid', async(req,res,next)=>{
     } 
     
     catch (err) {
-        res.status(500).json({ 
-            message: "Internal Server Error",
-            data:err
+        res.status(200).json({ 
+            success:false,
+            message: err.message
          });
     }
     
@@ -130,16 +131,16 @@ router.post('/req-accept-status', async(req,res,next)=>{
                     data:acceptPetRequest
                 });
             } else {
-                res.status(404).json({
+                res.status(200).json({
                     success: false,
                     message: 'Pet request not found.'
                 });
             }
         } catch (error) {
             console.error(error);
-            res.status(500).json({
-                success: false,
-                message: 'Internal Server Error.'
+            res.status(200).json({
+                success:false,
+                message: error.message
             });
         }
     }
@@ -167,16 +168,16 @@ router.post('/req-accept-status', async(req,res,next)=>{
                     data:rejectPetRequest_info
                 });
             } else {
-                res.status(404).json({
+                res.status(200).json({
                     success: false,
                     message: 'Pet request not found.'
                 });
             }
         } catch (error) {
             console.error(error);
-            res.status(500).json({
-                success: false,
-                message: 'Internal Server Error.'
+            res.status(200).json({
+                success:false,
+                message: error.message
             });
         }
     }

@@ -16,9 +16,12 @@ const PetSchema = new mongoose.Schema({
         type:String,
         required:true
     },
-    pet_address:{
-        type:String,
-        required:true
+    location:{
+        type:{
+            type:String,
+            required:true
+        },
+        coordinates:[]
     },
     pet_drop_off:{
         type:String,

@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const mongoose =  require('mongoose')
 const user = require('../models/user.js')
+const petsitterdetail = require('../models/petsitter_detail.js')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const OTP = require ("../models/opt.js")
@@ -57,8 +58,9 @@ router.post('/register',async (req,res,next)=>{
         }
     } catch (err) {
         console.error(err);
-        res.status(500).json({
-            error: err
+        res.status(200).json({
+            success:false,
+            message: err.message
         });
     }
 })
@@ -104,8 +106,9 @@ router.post('/login', (req,res,next)=>{
         })
     })
     .catch(err=>{
-        res.status(501).json({
-            error:err
+        res.status(200).json({
+            success:false,
+            message: err.message
         })
     })
 })
@@ -246,16 +249,34 @@ router.post('/update-info',upload.array('images', 5), async(req,res,next)=>{
     if(upadate_user.user_type == "pet sitter")
     {
         const images = req.files.map(file => file.path);
-        const update_user = await user.findByIdAndUpdate(req.user._id,{
+        const newPetSitterDetail = new petsitterdetail({
+            _id:new mongoose.Types.ObjectId(),
+            petSitterId:upadate_user._id,
             gender:req.body.gender,
-            first_name:req.body.first_name,
-            last_name:req.body.last_name,
-            lat:req.body.lat,
-            long:req.body.long,
+            petPurposeType:JSON.parse(req.body.petPurposeType),
+            categoryName:JSON.parse(req.body.categoryName),
             age:req.body.age,   
             images:images,
-            about:req.body.about
+            about:req.body.about,
+            pet_size:req.body.pet_size,
+            location:{
+                type:"Point",
+                coordinates:[
+                    parseFloat(req.body.longitude),
+                    parseFloat(req.body.latitude)
+                ]
+            },
         })
+        await newPetSitterDetail.save();
+
+        if(newPetSitterDetail)
+        {
+            // console.log(typeof)
+            await user.findByIdAndUpdate(upadate_user._id,{
+                $set:{petSitter_update_status:1}
+            })
+        }
+
         res.status(200).json({
             success:true,
             message: "Pet Sitter Information Added."
@@ -270,5 +291,6 @@ router.post('/update-info',upload.array('images', 5), async(req,res,next)=>{
     }
 
 })
+
 
 module.exports = router
