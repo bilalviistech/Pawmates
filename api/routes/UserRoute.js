@@ -94,6 +94,8 @@ router.post('/login', (req,res,next)=>{
                     name:user[0].name,
                     email:user[0].email,
                     user_type:user[0].user_type,
+                    pet_add_status:user[0].pet_add_status,
+                    petSitter_update_status:user[0].petSitter_update_status,
                     token:token
                 });
             }
