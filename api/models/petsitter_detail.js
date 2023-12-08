@@ -22,8 +22,10 @@ const PetSitterSchema = new mongoose.Schema({
         required:true
     },
     pet_size:{
-        type:String,
-        enum: ['small', 'medium', 'large', 'giant'],
+        type:[{
+            type:String,
+            enum: ['small', 'medium', 'large', 'giant'],
+        }],
         required:true
     },
     location:{

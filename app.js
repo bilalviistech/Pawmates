@@ -15,6 +15,7 @@ app.use(bodyParser.json())
 app.use('/user',UserRoute)
 app.use('/pet',PetRoute)
 app.use('/pet',PetRequestRoute)
+app.use('/uploads', express.static('uploads'));
 
 // Bad Request
 app.use((req,res,next)=>{

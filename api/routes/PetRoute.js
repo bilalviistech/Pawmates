@@ -14,6 +14,7 @@ const auth = require('../../middlewares/auth-middleware.js')
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const fullUrl = req.protocol + '://' + req.get('host') + '/uploads/';
 // const basePath = path.resolve(__dirname);
 
 const storage = multer.diskStorage({
@@ -102,6 +103,7 @@ router.get('/getall-pet', async(req,res,next)=>{
     const allPet = await pet.find()
     res.status(200).json({
         success:true,
+        path:fullUrl,
         data:allPet
     })
 })
@@ -116,6 +118,7 @@ router.get('/search-pet', async(req,res,next)=>{
         {
             res.status(200).json({
                 success:true,
+                path:fullUrl,
                 data:search_pet
             })
         }
@@ -136,6 +139,7 @@ router.get('/search-pet', async(req,res,next)=>{
         {
             res.status(200).json({
                 success:true,
+                path:fullUrl,
                 data:search_pet
             })
         }
@@ -156,6 +160,7 @@ router.get('/search-pet', async(req,res,next)=>{
         {
             res.status(200).json({
                 success:true,
+                path:fullUrl,
                 data:search_pet
             })
         }
@@ -176,6 +181,7 @@ router.get('/search-pet', async(req,res,next)=>{
         {
             res.status(200).json({
                 success:true,
+                path:fullUrl,
                 data:search_pet
             })
         }
@@ -228,13 +234,14 @@ router.get('/search-pet-sitter', async (req, res, next) => {
             {
                 res.status(200).json({
                     success:true,
-                    message:"No Nearest Pet's Found."
+                    message:"No Nearest Pet Sitter Found."
                 })
             }
             else
             {
                 res.status(200).json({
                     success:true,
+                    path:fullUrl,
                     message:location
                 })
             }
