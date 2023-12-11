@@ -64,6 +64,7 @@ router.post('/add-pet', upload.array('images', 5), async (req, res, next) => {
                 gender: req.body.gender,
                 breed: req.body.breed,
                 age: req.body.age,
+                pet_descp : req.body.pet_descp,
                 images: images,
 
             });
@@ -216,41 +217,46 @@ router.get('/search-pet-sitter', async (req, res, next) => {
         const pet_service = req.body.pet_service;
         const sitter_detail = await petsitterdetail.find({ petPurposeType: pet_service, categoryName: pet_category })
         var fullUrl = req.protocol + '://' + req.get('host') + '/uploads/';
-        if (sitter_detail.length > 0) {
-            const location = await petsitterdetail.aggregate([
-                {
-                    $geoNear: {
-                        near: {
-                            type: "Point",
-                            coordinates: [parseFloat(longitude), parseFloat(latitude)]
-                        },
-                        key: "location",
-                        maxDistance: parseFloat(0.8) * 1609,
-                        // maxDistance:parseFloat(100000)*1609,
-                        distanceField: "dist.calculated",
-                        spherical: true
-                    }
-                },
-                {
-                    $match: {
-                        _id: { $in: sitter_detail.map(sitter => sitter._id) }
-                    }
-                }
-            ])
+        if (sitter_detail.length > 0) 
+        {
+            res.status(200).json({
+                success: true,
+                data: sitter_detail
+            })
 
-            if (location.length == 0) {
-                res.status(200).json({
-                    success: true,
-                    message: "No Nearest Pet Sitter Found."
-                })
-            }
-            else {
-                res.status(200).json({
-                    success: true,
-                    path: fullUrl,
-                    message: location
-                })
-            }
+            // const location = await petsitterdetail.aggregate([
+            //     {
+            //         $geoNear: {
+            //             near: {
+            //                 type: "Point",
+            //                 coordinates: [parseFloat(longitude), parseFloat(latitude)]
+            //             },
+            //             key: "location",
+            //             maxDistance: parseFloat(0.8) * 1609,
+            //             distanceField: "dist.calculated",
+            //             spherical: true
+            //         }
+            //     },
+            //     {
+            //         $match: {
+            //             _id: { $in: sitter_detail.map(sitter => sitter._id) }
+            //         }
+            //     }
+            // ])
+
+            // if (location.length == 0) {
+            //     res.status(200).json({
+            //         success: true,
+            //         message: "No Nearest Pet Sitter Found."
+            //     })
+            // }
+            // else {
+            //     res.status(200).json({
+            //         success: true,
+            //         path: fullUrl,
+            //         message: location
+            //     })
+            // }
         }
 
         else {

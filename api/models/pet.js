@@ -64,6 +64,10 @@ const PetSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+    pet_descp:{
+        type:String,
+        required:true
+    },
 })
 
 module.exports = mongoose.model('Pet',PetSchema)
