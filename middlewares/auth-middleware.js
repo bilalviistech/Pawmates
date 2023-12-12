@@ -15,14 +15,16 @@ var CheckUserAuth = async(req,res,next)=>{
             next()
         } catch (error) {
             console.log("error")
-            res.status(404).json({
-                message : "Not Found"
+            res.status(200).json({
+                success:false,
+                message : error.message
             })
         }
     }
     if(!token){
-        res.status(401).json({
-            message:"Un-Authorized Access"
+        res.status(200).json({
+            success:false,
+            message:"Un Authorized Access"
         })
     }
 }

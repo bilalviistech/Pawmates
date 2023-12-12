@@ -94,7 +94,7 @@ router.post('/add-pet', upload.array('images', 5), async (req, res, next) => {
     }
 })
 
-
+// Get All Pet
 router.use('/getall-pet', auth)
 router.get('/getall-pet', async (req, res, next) => {
     const allPet = await pet.find()
@@ -127,6 +127,7 @@ router.get('/getall-Mypet', async (req, res, next) => {
     }
 })
 
+// Search Pet
 router.use('/search-pet', auth)
 router.get('/search-pet', async (req, res, next) => {
     const { category_name, pet_name_type, pet_purpose_type } = req.body;
@@ -207,7 +208,7 @@ router.get('/search-pet', async (req, res, next) => {
     }
 })
 
-// Search Pet-Sitter
+// Search Pet Sitter
 router.use('/search-pet-sitter', auth)
 router.get('/search-pet-sitter', async (req, res, next) => {
     try {

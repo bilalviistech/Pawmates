@@ -4,6 +4,7 @@ const mongoose =  require('mongoose')
 const user = require('../models/user.js')
 const pet = require('../models/pet.js')
 const petrequest = require('../models/petrequest.js')
+const petsitterdetail = require('../models/petsitter_detail.js')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const OTP = require ("../models/opt.js")
@@ -14,6 +15,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
+// Pet Sitter Request Send
 router.use('/req-send',auth)
 router.post('/req-send', async (req, res, next) => {
     try
@@ -34,9 +36,24 @@ router.post('/req-send', async (req, res, next) => {
 
             else
             {
+                var pet_sitter_detail = await petsitterdetail.findOne({petSitterId:pet_request_id._id})
+                // console.log(pet_sitter_detail)
+                // return
                 // If it exists, update the existing record by appending the new pet_request_id
                 await petrequest.findByIdAndUpdate(existingRequest._id, {
-                    $push: { pet_request: {pet_request_senderid:pet_request_id,pet_request_send:pet_request_status,pet_owner_accept_status:"pending"} }
+                    $push: 
+                    { 
+                        pet_request: 
+                        {
+                            pet_request_senderid:pet_request_id,
+                            senderid_name:pet_sitter_detail.name,
+                            senderid_age:pet_sitter_detail.age,
+                            senderid_images:pet_sitter_detail.images,
+                            senderid_location:pet_sitter_detail.location,
+                            pet_request_send:pet_request_status,
+                            pet_owner_accept_status:"pending"
+                        } 
+                    }
                 });
                 
                 res.status(200).json({
@@ -48,11 +65,24 @@ router.post('/req-send', async (req, res, next) => {
         
         else
         {
+            var pet_sitter_detail = await petsitterdetail.findOne({petSitterId:pet_request_id._id})
+            // console.log(pet_siiterdear)
+            // return
             const newRequest = new petrequest({
                 _id: new mongoose.Types.ObjectId(),
                 pet_id: pet_id,
                 pet_owner_id: pet_owner_id,
-                pet_request: [{pet_request_senderid:pet_request_id,pet_request_send:pet_request_status,pet_owner_accept_status:"pending"}],
+                pet_request: [
+                    {
+                        pet_request_senderid:pet_request_id,
+                        senderid_name:pet_sitter_detail.name,
+                        senderid_age:pet_sitter_detail.age,
+                        senderid_images:pet_sitter_detail.images,
+                        senderid_location:pet_sitter_detail.location,
+                        pet_request_send:pet_request_status,
+                        pet_owner_accept_status:"pending"
+                    }
+                ],
             });
             await newRequest.save();
 
@@ -72,6 +102,7 @@ router.post('/req-send', async (req, res, next) => {
     }
 });
 
+// Request Info By Pet-ID
 router.use('/reqinfo_petid',auth)
 router.get('/reqinfo_petid', async(req,res,next)=>{
     
@@ -106,6 +137,28 @@ router.get('/reqinfo_petid', async(req,res,next)=>{
     
 })
 
+// Request Info By Pet-ID
+router.use('/reqinfo-petowner',auth)
+router.get('/reqinfo-petowner', async (req,res,next)=>{
+    const reqinfo_petowner = await petrequest.find({ pet_owner_id: req.user._id})
+    if(reqinfo_petowner.length > 0)
+    {
+        res.status(200).json({ 
+            success:true,
+            data: reqinfo_petowner
+        });
+    }
+
+    else
+    {
+        res.status(200).json({ 
+            success:false,
+            message: "No Request Found For Your Pet's."
+        });
+    }
+})
+
+// Pet Owner Request Accept/Reject Status
 router.use('/req-accept-status',auth)
 router.post('/req-accept-status', async(req,res,next)=>{
     const pet_owner_status = req.body.pet_owner_accept_status;

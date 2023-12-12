@@ -260,6 +260,7 @@ router.post('/update-info',upload.array('images', 5), async(req,res,next)=>{
             age:req.body.age,   
             images:images,
             about:req.body.about,
+            name:req.body.name,
             pet_size:JSON.parse(req.body.pet_size),
             location:{
                 type:"Point",

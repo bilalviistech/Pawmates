@@ -49,6 +49,10 @@ const PetSitterSchema = new mongoose.Schema({
     },
     images:{
         type:Array,
+    },
+    name:{
+        type:String,
+        required:true
     }
     
 })

@@ -16,6 +16,25 @@ const PetRequestSchema = new mongoose.Schema({
         {
             // id: mongoose.Schema.Types.ObjectId,
             pet_request_senderid: {type:mongoose.Schema.Types.ObjectId},
+            senderid_age:{
+                type:String,
+                required:true
+            },
+            senderid_name:{
+                type:String,
+                required:true
+            },
+            senderid_location:{
+                type:{
+                    type:String,
+                    required:true
+                },
+                coordinates:[]
+            },
+
+            senderid_images:{
+                type:Array
+            },
             pet_request_send: {
                 enum:["send"],
                 type:String,
