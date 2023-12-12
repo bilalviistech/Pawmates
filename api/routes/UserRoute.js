@@ -45,6 +45,7 @@ router.post('/register',async (req,res,next)=>{
 
             const newUser = new user({
                 _id: new mongoose.Types.ObjectId(),
+                name: req.body.name,
                 email: req.body.email,
                 password: hash,
                 user_type: req.body.user_type,
@@ -260,7 +261,7 @@ router.post('/update-info',upload.array('images', 5), async(req,res,next)=>{
             age:req.body.age,   
             images:images,
             about:req.body.about,
-            name:req.body.name,
+            name:upadate_user.user_type,
             pet_size:JSON.parse(req.body.pet_size),
             location:{
                 type:"Point",
