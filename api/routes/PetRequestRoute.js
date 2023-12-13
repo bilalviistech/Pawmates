@@ -1,238 +1,153 @@
 const express = require('express')
 const router = express.Router()
-const mongoose =  require('mongoose')
+const mongoose = require('mongoose')
 const user = require('../models/user.js')
 const pet = require('../models/pet.js')
 const petrequest = require('../models/petrequest.js')
 const petsitterdetail = require('../models/petsitter_detail.js')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
-const OTP = require ("../models/opt.js")
-const nodemailer = require ('nodemailer')
+const OTP = require("../models/opt.js")
+const nodemailer = require('nodemailer')
 const dotenv = require('dotenv').config({ path: '../../.env' });
 const auth = require('../../middlewares/auth-middleware.js')
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const petsitter_detail = require('../models/petsitter_detail.js')
 
 // Pet Sitter Request Send
-router.use('/req-send',auth)
+router.use('/req-send', auth)
 router.post('/req-send', async (req, res, next) => {
-    try
-    {
-        const { pet_id, pet_owner_id, pet_request, pet_request_status } = req.body;
-        const pet_request_id = await user.findOne({ _id: req.user._id });
-        const existingRequest = await petrequest.findOne({ pet_id : pet_id });
+    try {
+        const { pet_id, pet_owner_id, pet_request, pet_request_send } = req.body;
+        const existing_request = await petrequest.findOne({ pet_request_senderid: req.user._id, pet_id: pet_id })
 
-        if (existingRequest)
-        {
-            const existtt = existingRequest.pet_request.some(item => item.pet_request_senderid.toString() === pet_request_id._id.toString());
-            if(existtt) {
-                res.status(200).json({
-                    success: false,
-                    message: 'Request Already Exist.'
-                });
-            }
-
-            else
-            {
-                var pet_sitter_detail = await petsitterdetail.findOne({petSitterId:pet_request_id._id})
-                // console.log(pet_sitter_detail)
-                // return
-                // If it exists, update the existing record by appending the new pet_request_id
-                await petrequest.findByIdAndUpdate(existingRequest._id, {
-                    $push: 
-                    { 
-                        pet_request: 
-                        {
-                            pet_request_senderid:pet_request_id,
-                            senderid_name:pet_sitter_detail.name,
-                            senderid_age:pet_sitter_detail.age,
-                            senderid_images:pet_sitter_detail.images,
-                            senderid_location:pet_sitter_detail.location,
-                            pet_request_send:pet_request_status,
-                            pet_owner_accept_status:"pending"
-                        } 
-                    }
-                });
-                
-                res.status(200).json({
-                    success: true,
-                    message: 'Request Created Successfully.'
-                });
-            }
-        }
-        
-        else
-        {
-            var pet_sitter_detail = await petsitterdetail.findOne({petSitterId:pet_request_id._id})
-            // console.log(pet_siiterdear)
-            // return
-            const newRequest = new petrequest({
-                _id: new mongoose.Types.ObjectId(),
-                pet_id: pet_id,
-                pet_owner_id: pet_owner_id,
-                pet_request: [
-                    {
-                        pet_request_senderid:pet_request_id,
-                        senderid_name:pet_sitter_detail.name,
-                        senderid_age:pet_sitter_detail.age,
-                        senderid_images:pet_sitter_detail.images,
-                        senderid_location:pet_sitter_detail.location,
-                        pet_request_send:pet_request_status,
-                        pet_owner_accept_status:"pending"
-                    }
-                ],
+        if (existing_request) {
+            res.status(200).json({
+                success: false,
+                message: "Request Already Sent."
             });
-            await newRequest.save();
+        }
+
+        else {
+            const senderuser_exists = await user.findOne(req.user._id)
+            const senderuser_detail = await petsitter_detail.findOne({ petSitterId: senderuser_exists._id })
+
+            const pet_detail = await pet.findOne({ _id: pet_id })
+
+            const newPet_Req = new petrequest({
+                _id: new mongoose.Types.ObjectId(),
+                pet_owner_id: pet_owner_id,
+                pet_id: pet_id,
+                pet_request_senderid: req.user._id,
+                senderid_name: senderuser_exists.name,
+                senderid_age: senderuser_detail.age,
+                senderid_location: senderuser_detail.location,
+                senderid_images: senderuser_detail.images,
+                pet_name: pet_detail.pet_nickname,
+                pet_images: pet_detail.images,
+                pet_request_send: pet_request_send,
+                pet_owner_accept_status: "pending"
+            });
+
+            await newPet_Req.save();
 
             res.status(200).json({
                 success: true,
-                message: 'Request Created Successfully.'
+                message: "Request Sent Successfully."
             });
+
         }
     }
-    
+
     catch (err) {
         console.error(err);
         res.status(200).json({
-            success:false,
+            success: false,
             message: err.message
         });
     }
 });
 
-// Request Info By Pet-ID
-router.use('/petinfo_petid',auth)
-router.get('/petinfo_petid', async(req,res,next)=>{
-    
-    try {
-        const {petId} = req.body;
-        
-        const checked = await pet.findOne({_id:petId})
-
-        if(checked)
-        {
-            res.status(200).json({
-                success: true,
-                data: checked
-            });
-        }
-
-        else
-        {
-            res.status(200).json({
-                success: false,
-                message:"Pet Info Not Found"
-            });
-        }
-    } 
-    
-    catch (err) {
-        res.status(200).json({ 
-            success:false,
-            message: err.message
-         });
-    }
-    
-})
-
 // Request Info By Pet-Owner
-router.use('/reqinfo-petowner',auth)
-router.get('/reqinfo-petowner', async (req,res,next)=>{
-    const reqinfo_petowner = await petrequest.find({ pet_owner_id: req.user._id})
-    if(reqinfo_petowner.length > 0)
-    {
-        res.status(200).json({ 
-            success:true,
+router.use('/reqinfo-petowner', auth)
+router.get('/reqinfo-petowner', async (req, res, next) => {
+    const reqinfo_petowner = await petrequest.find({ pet_owner_id: req.user._id })
+    if (reqinfo_petowner.length > 0) {
+        res.status(200).json({
+            success: true,
             data: reqinfo_petowner
         });
     }
 
-    else
-    {
-        res.status(200).json({ 
-            success:false,
+    else {
+        res.status(200).json({
+            success: false,
             message: "No Request Found For Your Pet's."
         });
     }
 })
 
 // Pet Owner Request Accept/Reject Status
-router.use('/req-accept-status',auth)
-router.post('/req-accept-status', async(req,res,next)=>{
+router.use('/req-accept-status', auth)
+router.post('/req-accept-status', async (req, res, next) => {
     const pet_owner_status = req.body.pet_owner_accept_status;
-    const {pet_request_senderid,petrequest_id} = req.body;
-    if(pet_owner_status == "accept")
-    {
-        try {
-            const acceptPetRequest = await petrequest.findOneAndUpdate(
-                {
-                    _id: petrequest_id,
-                    "pet_request.pet_request_senderid": pet_request_senderid
-                },
-                {
-                    $set: { "pet_request.$.pet_owner_accept_status": pet_owner_status }
-                },
-                { new: true }
-            );
+    const petrequest_id = req.body.petrequest_id;
+    try {
+        if (pet_owner_status == "accept") {
+            var petRequest_update = await petrequest.findOneAndUpdate({ _id: petrequest_id, pet_owner_id:req.user._id },
+                { $set: { pet_owner_accept_status: pet_owner_status } }
+            )
 
-            if (acceptPetRequest) {
+            if (petRequest_update) {
                 res.status(200).json({
                     success: true,
-                    message: `Pet request ${pet_owner_status} successfully.`,
-                    data:acceptPetRequest
-                });
-            } else {
-                res.status(200).json({
-                    success: false,
-                    message: 'Pet request not found.'
+                    message: "Accept Pet Request."
                 });
             }
-        } catch (error) {
-            console.error(error);
+
+            else {
+                res.status(200).json({
+                    success: false,
+                    message: "No Pet Request Found."
+                });
+            }
+        }
+
+        else if (pet_owner_status == "reject") {
+            var petRequest_update = await petrequest.findOneAndUpdate({ _id: petrequest_id, pet_owner_id:req.user._id },
+                { $set: { pet_owner_accept_status: pet_owner_status } }
+            )
+
+            if (petRequest_update) {
+                res.status(200).json({
+                    success: true,
+                    message: "Reject Pet Request."
+                });
+            }
+
+            else {
+                res.status(200).json({
+                    success: false,
+                    message: "No Pet Request Found."
+                });
+            }
+        }
+
+        else {
             res.status(200).json({
-                success:false,
-                message: error.message
+                success: false,
+                message: "You Must Select Accept Or Reject."
             });
         }
     }
 
-    if(pet_owner_status == "reject")
-    {
-        try {
-            const rejectPetRequest = await petrequest.findOneAndUpdate(
-                {
-                    _id: petrequest_id,
-                    "pet_request.pet_request_senderid": pet_request_senderid
-                },
-                {
-                    $set: { "pet_request.$.pet_owner_accept_status": pet_owner_status }
-                },
-                { new: true }
-            );
-
-            if (rejectPetRequest) {
-
-                const rejectPetRequest_info = await petrequest.findOne({_id:petrequest_id,"pet_request.pet_request_senderid": pet_request_senderid});
-                res.status(200).json({
-                    success: true,
-                    message: `Pet request ${pet_owner_status} successfully.`,
-                    data:rejectPetRequest_info
-                });
-            } else {
-                res.status(200).json({
-                    success: false,
-                    message: 'Pet request not found.'
-                });
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(200).json({
-                success:false,
-                message: error.message
-            });
-        }
+    catch (err) {
+        res.status(200).json({
+            success: false,
+            message: err.message
+        });
     }
 
 })

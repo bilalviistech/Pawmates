@@ -127,6 +127,39 @@ router.get('/getall-Mypet', async (req, res, next) => {
     }
 })
 
+// Request Info By Pet-ID
+router.use('/petinfo_petid', auth)
+router.get('/petinfo_petid', async (req, res, next) => {
+
+    try {
+        const { petId } = req.body;
+
+        const checked = await pet.findOne({ _id: petId })
+
+        if (checked) {
+            res.status(200).json({
+                success: true,
+                data: checked
+            });
+        }
+
+        else {
+            res.status(200).json({
+                success: false,
+                message: "Pet Info Not Found"
+            });
+        }
+    }
+
+    catch (err) {
+        res.status(200).json({
+            success: false,
+            message: err.message
+        });
+    }
+
+})
+
 // Search Pet
 router.use('/search-pet', auth)
 router.get('/search-pet', async (req, res, next) => {

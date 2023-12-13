@@ -249,42 +249,54 @@ router.post('/change-password',async (req,res,next)=>{
 router.use('/update-info',auth)
 router.post('/update-info',upload.array('images', 5), async(req,res,next)=>{
     const upadate_user = await user.findById(req.user._id)
+    const existing_upadate_user = await petsitterdetail.findOne({petSitterId:req.user._id})
     if(upadate_user.user_type == "pet sitter")
     {
-        const images = req.files.map(file => file.path);
-        const newPetSitterDetail = new petsitterdetail({
-            _id:new mongoose.Types.ObjectId(),
-            petSitterId:upadate_user._id,
-            gender:req.body.gender,
-            petPurposeType:JSON.parse(req.body.petPurposeType),
-            categoryName:JSON.parse(req.body.categoryName),
-            age:req.body.age,   
-            images:images,
-            about:req.body.about,
-            name:upadate_user.user_type,
-            pet_size:JSON.parse(req.body.pet_size),
-            location:{
-                type:"Point",
-                coordinates:[
-                    parseFloat(req.body.longitude),
-                    parseFloat(req.body.latitude)
-                ]
-            },
-        })
-        await newPetSitterDetail.save();
-
-        if(newPetSitterDetail)
+        if(existing_upadate_user)
         {
-            // console.log(typeof)
-            await user.findByIdAndUpdate(upadate_user._id,{
-                $set:{petSitter_update_status:1}
+            res.status(200).json({
+                success:false,
+                message: "Pet Sitter Information Already Added."
+            })
+        }  
+
+        else
+        {
+            const images = req.files.map(file => file.path);
+            const newPetSitterDetail = new petsitterdetail({
+                _id:new mongoose.Types.ObjectId(),
+                petSitterId:upadate_user._id,
+                gender:req.body.gender,
+                petPurposeType:JSON.parse(req.body.petPurposeType),
+                categoryName:JSON.parse(req.body.categoryName),
+                age:req.body.age,   
+                images:images,
+                about:req.body.about,
+                name:upadate_user.user_type,
+                pet_size:JSON.parse(req.body.pet_size),
+                location:{
+                    type:"Point",
+                    coordinates:[
+                        parseFloat(req.body.longitude),
+                        parseFloat(req.body.latitude)
+                    ]
+                },
+            })
+            await newPetSitterDetail.save();
+
+            if(newPetSitterDetail)
+            {
+                // console.log(typeof)
+                await user.findByIdAndUpdate(upadate_user._id,{
+                    $set:{petSitter_update_status:1}
+                })
+            }
+
+            res.status(200).json({
+                success:true,
+                message: "Pet Sitter Information Added."
             })
         }
-
-        res.status(200).json({
-            success:true,
-            message: "Pet Sitter Information Added."
-        })
     }
 
     else{
