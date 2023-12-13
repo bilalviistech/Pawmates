@@ -29,7 +29,7 @@ router.post('/req-send', async (req, res, next) => {
             const existtt = existingRequest.pet_request.some(item => item.pet_request_senderid.toString() === pet_request_id._id.toString());
             if(existtt) {
                 res.status(200).json({
-                    success: true,
+                    success: false,
                     message: 'Request Already Exist.'
                 });
             }
@@ -103,13 +103,13 @@ router.post('/req-send', async (req, res, next) => {
 });
 
 // Request Info By Pet-ID
-router.use('/reqinfo_petid',auth)
-router.get('/reqinfo_petid', async(req,res,next)=>{
+router.use('/petinfo_petid',auth)
+router.get('/petinfo_petid', async(req,res,next)=>{
     
     try {
-        const {petId,petOwner_Id} = req.body;
+        const {petId} = req.body;
         
-        const checked = await petrequest.findOne({pet_id:petId,pet_owner_id:petOwner_Id})
+        const checked = await pet.findOne({_id:petId})
 
         if(checked)
         {
@@ -123,7 +123,7 @@ router.get('/reqinfo_petid', async(req,res,next)=>{
         {
             res.status(200).json({
                 success: false,
-                message:"Info Not Found"
+                message:"Pet Info Not Found"
             });
         }
     } 
@@ -137,7 +137,7 @@ router.get('/reqinfo_petid', async(req,res,next)=>{
     
 })
 
-// Request Info By Pet-ID
+// Request Info By Pet-Owner
 router.use('/reqinfo-petowner',auth)
 router.get('/reqinfo-petowner', async (req,res,next)=>{
     const reqinfo_petowner = await petrequest.find({ pet_owner_id: req.user._id})

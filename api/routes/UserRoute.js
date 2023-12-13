@@ -290,7 +290,7 @@ router.post('/update-info',upload.array('images', 5), async(req,res,next)=>{
     else{
         res.status(200).json({
             success:false,
-            message: "Your'e not a pett sitter."
+            message: "Your'e not a pet sitter."
         })
     }
 

@@ -121,7 +121,7 @@ router.get('/getall-Mypet', async (req, res, next) => {
     }
     else {
         res.status(200).json({
-            success: true,
+            success: false,
             message: "No Ads."
         })
     }
