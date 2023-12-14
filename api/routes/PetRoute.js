@@ -14,6 +14,7 @@ const auth = require('../../middlewares/auth-middleware.js')
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const petsitter_detail = require('../models/petsitter_detail.js')
 
 // const basePath = path.resolve(__dirname);
 
@@ -249,13 +250,13 @@ router.get('/search-pet-sitter', async (req, res, next) => {
         const longitude = req.body.longitude;
         const pet_category = req.body.pet_category;
         const pet_service = req.body.pet_service;
-        const sitter_detail = await petsitterdetail.find({ petPurposeType: pet_service, categoryName: pet_category })
+        const sitter_detaill = await petsitterdetail.find({ petPurposeType: pet_service, categoryName: pet_category })
         var fullUrl = req.protocol + '://' + req.get('host') + '/uploads/';
-        if (sitter_detail.length > 0) 
+        if (sitter_detaill.length > 0) 
         {
             res.status(200).json({
                 success: true,
-                data: sitter_detail
+                data: sitter_detaill
             })
 
             // const location = await petsitterdetail.aggregate([
@@ -273,7 +274,7 @@ router.get('/search-pet-sitter', async (req, res, next) => {
             //     },
             //     {
             //         $match: {
-            //             _id: { $in: sitter_detail.map(sitter => sitter._id) }
+            //             _id: { $in: sitter_detaill.map(sitter => sitter._id) }
             //         }
             //     }
             // ])
@@ -309,5 +310,33 @@ router.get('/search-pet-sitter', async (req, res, next) => {
         });
     }
 });
+
+router.use('/check-api', auth)
+router.get('/check-api',async (req,res,next)=>{
+
+    const check_pet_category = req.body.pet_category;
+    const check_pet_service = req.body.pet_service;
+    
+    const sitter_detail = await petsitter_detail.find({categoryName:check_pet_category, petPurposeType:check_pet_service})
+
+    if(sitter_detail.length > 0)
+    {
+        res.status(200).json({
+            success:true,
+            data:sitter_detail
+        })
+    }
+
+    else
+    {
+        res.status(200).json({
+            success:false,
+            message:"No Pet Sitter Found.",
+            message1: check_pet_category,
+            message2: check_pet_service
+        })
+    }
+    
+})
 
 module.exports = router
