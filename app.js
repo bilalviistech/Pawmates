@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 const UserRoute = require('./api/routes/UserRoute.js')
 const PetRoute = require('./api/routes/PetRoute.js')
 const PetRequestRoute = require('./api/routes/PetRequestRoute.js')
+const FavoriteRoute = require('./api/routes/FavoriteRoute.js')
 const io = require('./server.js')
 db()    
 
@@ -15,6 +16,7 @@ app.use(bodyParser.json())
 app.use('/user',UserRoute)
 app.use('/pet',PetRoute)
 app.use('/pet',PetRequestRoute)
+app.use('/pet',FavoriteRoute)
 app.use('/uploads', express.static('uploads'));
 
 // Bad Request
