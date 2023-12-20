@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const db = require('./connectDB.js')
+const cors = require('cors')
 const bodyParser = require('body-parser')
 const UserRoute = require('./api/routes/UserRoute.js')
 const PetRoute = require('./api/routes/PetRoute.js')
@@ -9,6 +10,7 @@ const FavoriteRoute = require('./api/routes/FavoriteRoute.js')
 const io = require('./server.js')
 db()    
 
+app.use(cors())
 app.use(bodyParser.urlencoded({extended:false}))
 app.use(bodyParser.json()) 
 

@@ -312,7 +312,7 @@ router.get('/search-pet-sitter', async (req, res, next) => {
 });
 
 router.use('/check-api', auth)
-router.get('/check-api',async (req,res,next)=>{
+router.post('/check-api',async (req,res,next)=>{
 
     const check_pet_category = req.body.pet_category;
     const check_pet_service = req.body.pet_service;
@@ -331,9 +331,7 @@ router.get('/check-api',async (req,res,next)=>{
     {
         res.status(200).json({
             success:false,
-            message:"No Pet Sitter Found.",
-            message1: check_pet_category,
-            message2: check_pet_service
+            message:"No Pet Sitter Found."
         })
     }
     
