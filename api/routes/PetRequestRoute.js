@@ -5,6 +5,7 @@ const user = require('../models/user.js')
 const pet = require('../models/pet.js')
 const petrequest = require('../models/petrequest.js')
 const petsitterdetail = require('../models/petsitter_detail.js')
+const petowner_request = require('../models/petowner_request.js')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const OTP = require("../models/opt.js")
@@ -70,6 +71,53 @@ router.post('/req-send', async (req, res, next) => {
     }
 });
 
+// Pet Owner Request Send
+router.use('/owner-req-send', auth)
+router.post('/owner-req-send', async (req, res, next) => {
+    try {
+        const petId = req.body.pet_id
+        const SitterId = req.body.receive_sitter_id
+
+        const existOwner_request = await petowner_request.findOne({ pet_id: petId, receive_sitter_id: SitterId })
+
+        if (existOwner_request) {
+            // console.log("if")
+            // return
+            res.status(200).json({
+                success: false,
+                message: "Request Already Sent."
+            });
+        }
+
+        else {
+            // console.log("else")
+            // return
+            const petOwnerReq = new petowner_request({
+                _id: new mongoose.Types.ObjectId(),
+                pet_id:petId,
+                pet_owner_sender_id:req.user._id,
+                receive_sitter_id:SitterId
+            })
+
+            await petOwnerReq.save();
+
+            res.status(200).json({
+                success: true,
+                message: "Request Sent Successfully."
+            });
+
+        }
+    }
+
+    catch (err) {
+        console.error(err);
+        res.status(200).json({
+            success: false,
+            message: err.message
+        });
+    }
+});
+
 // Request Info By Pet-Owner
 router.use('/reqinfo-petowner', auth)
 router.get('/reqinfo-petowner', async (req, res, next) => {
@@ -85,6 +133,25 @@ router.get('/reqinfo-petowner', async (req, res, next) => {
         res.status(200).json({
             success: false,
             message: "No Request Found For Your Pet's."
+        });
+    }
+})
+
+// Request Info By Pet-Sitter
+router.use('/reqinfo-petsitter', auth)
+router.get('/reqinfo-petsitter', async (req, res, next) => {
+    const reqinfo_petsitter = await petowner_request.find({ receive_sitter_id: req.user._id })
+    if (reqinfo_petsitter.length > 0) {
+        res.status(200).json({
+            success: true,
+            data: reqinfo_petsitter
+        });
+    }
+
+    else {
+        res.status(200).json({
+            success: false,
+            message: "No Request Found Of Pet Owner's."
         });
     }
 })
@@ -131,6 +198,69 @@ router.post('/req-accept-status', async (req, res, next) => {
                 res.status(200).json({
                     success: false,
                     message: "No Pet Request Found."
+                });
+            }
+        }
+
+        else {
+            res.status(200).json({
+                success: false,
+                message: "You Must Select Accept Or Reject."
+            });
+        }
+    }
+
+    catch (err) {
+        res.status(200).json({
+            success: false,
+            message: err.message
+        });
+    }
+
+})
+
+// Pet Sitter Request Accept/Reject Status
+router.use('/sitter-req-accept-status', auth)
+router.post('/sitter-req-accept-status', async (req, res, next) => {
+    const pet_sitter_status = req.body.pet_sitter_accept_status;
+    const petownerrequest_id = req.body.petownerrequest_id;
+    try {
+        if (pet_sitter_status == "accept") {
+            var ownerRequest_update = await petowner_request.findOneAndUpdate({ _id: petownerrequest_id, receive_sitter_id:req.user._id },
+                { $set: { pet_sitter_accept_status: pet_sitter_status } }
+            )
+
+            if (ownerRequest_update) {    
+                res.status(200).json({
+                    success: true,
+                    message: "Accept Pet Owner Request."
+                });
+            }
+
+            else {
+                res.status(200).json({
+                    success: false,
+                    message: "No Pet Owner Request Found."
+                });
+            }
+        }
+
+        else if (pet_sitter_status == "reject") {
+            var ownerRequest_update = await petowner_request.findOneAndUpdate({ _id: petownerrequest_id, receive_sitter_id:req.user._id },
+                { $set: { pet_sitter_accept_status: pet_sitter_status } }
+            )
+
+            if (ownerRequest_update) {
+                res.status(200).json({
+                    success: true,
+                    message: "Reject Pet Owner Request."
+                });
+            }
+
+            else {
+                res.status(200).json({
+                    success: false,
+                    message: "No Pet Owner Request Found."
                 });
             }
         }
