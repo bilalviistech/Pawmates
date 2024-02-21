@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // User Created
-router.post('/register',async (req,res,next)=>{
+router.post('/register',upload.single('profileImage'),async (req,res,next)=>{
 
     const check_email = req.body.email
     try 
@@ -40,6 +40,9 @@ router.post('/register',async (req,res,next)=>{
         }
         else
         {
+            // console.log(req.file.path)
+            // return
+            const image = req.file.path;
             const salt = await bcrypt.genSalt(10);
             const hash = await bcrypt.hash(req.body.password, salt);
 
@@ -49,6 +52,7 @@ router.post('/register',async (req,res,next)=>{
                 email: req.body.email,
                 password: hash,
                 user_type: req.body.user_type,
+                profileImage: image
             });
             await newUser.save();
 
@@ -80,6 +84,7 @@ router.post('/login', (req,res,next)=>{
         bcrypt.compare(req.body.password,user[0].password,(err,result)=>{
             if(result)
             {
+                var fullUrl = req.protocol + '://' + req.get('host') + '/uploads/';
                 const token = jwt.sign({
                     id:user[0]._id,
                     name:user[0].name,
@@ -91,13 +96,18 @@ router.post('/login', (req,res,next)=>{
                     expiresIn:"24h"
                 })
                 res.status(200).json({
-                    id:user[0].id,
-                    name:user[0].name,
-                    email:user[0].email,
-                    user_type:user[0].user_type,
-                    pet_add_status:user[0].pet_add_status,
-                    petSitter_update_status:user[0].petSitter_update_status,
-                    token:token
+                    success:true,
+                    path: fullUrl,
+                    data: {
+                        id:user[0].id,
+                        name:user[0].name,
+                        email:user[0].email,
+                        user_type:user[0].user_type,
+                        profileImage:user[0].profileImage,
+                        pet_add_status:user[0].pet_add_status,
+                        petSitter_update_status:user[0].petSitter_update_status,
+                        token:token
+                    },
                 });
             }
             else{

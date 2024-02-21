@@ -98,13 +98,38 @@ router.post('/add-pet', upload.array('images', 5), async (req, res, next) => {
 // Get All Pet
 router.use('/getall-pet', auth)
 router.get('/getall-pet', async (req, res, next) => {
-    const allPet = await pet.find()
     var fullUrl = req.protocol + '://' + req.get('host') + '/uploads/';
-    res.status(200).json({
-        success: true,
-        path: fullUrl,
-        data: allPet
-    })
+    console.log(req.user._id);
+    const petSitter_reqExist = await petrequest.find({ pet_request_senderid: req.user._id })
+    if(petSitter_reqExist)
+    {
+        const petIds = petSitter_reqExist.map(req => req.pet_id);
+        let check_pet = await pet.find({ _id: { $nin : petIds } });
+
+        if (check_pet.length > 0) {
+            res.status(200).json({
+                success: true,
+                path:fullUrl,
+                data:check_pet
+            })
+        } else {
+            res.status(200).json({
+                success: false,
+                message: 'No pets found.'
+            })
+        }
+    }
+
+    else
+    {
+        let check_pet = await pet.find();
+        res.status(200).json({
+            success: true,
+            path:fullUrl,
+            data:check_pet
+        })
+    }
+
 })
 
 // Get All My Pet

@@ -142,9 +142,31 @@ router.use('/reqinfo-petsitter', auth)
 router.get('/reqinfo-petsitter', async (req, res, next) => {
     const reqinfo_petsitter = await petowner_request.find({ receive_sitter_id: req.user._id })
     if (reqinfo_petsitter.length > 0) {
+        const PetAllDetail = []
+        for(var i=0; i<reqinfo_petsitter.length; i++)
+        {
+            const PetInfo = await pet.findOne({_id:reqinfo_petsitter[i].pet_id})
+            const UserInfo = await user.findOne({_id:reqinfo_petsitter[i].pet_owner_sender_id})
+
+            PetAllDetail.push({
+                _id:reqinfo_petsitter[i]._id,
+                pet_id:reqinfo_petsitter[i].pet_id,
+                pet_nickname:PetInfo.pet_nickname,
+                pet_age:PetInfo.age,
+                pet_images:PetInfo.images,
+                pet_size:PetInfo.pet_size,
+                pet_purpose_type:PetInfo.pet_purpose_type,
+                pet_owner_sender_id:reqinfo_petsitter[i].pet_owner_sender_id,
+                pet_owner_name:UserInfo.name,
+                receive_sitter_id:reqinfo_petsitter[i].receive_sitter_id,
+                pet_owner_request_send:reqinfo_petsitter[i].pet_owner_request_send,
+                pet_sitter_accept_status:reqinfo_petsitter[i].pet_sitter_accept_status,
+                __v:reqinfo_petsitter[i].__v,
+            })
+        }
         res.status(200).json({
             success: true,
-            data: reqinfo_petsitter
+            data: PetAllDetail
         });
     }
 
