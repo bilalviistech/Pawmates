@@ -8,7 +8,7 @@ const petsitterdetail = require('../models/petsitter_detail.js')
 const petowner_request = require('../models/petowner_request.js')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
-const OTP = require("../models/opt.js")
+// const OTP = require("../models/opt.js")
 const nodemailer = require('nodemailer')
 const dotenv = require('dotenv').config({ path: '../../.env' });
 const auth = require('../../middlewares/auth-middleware.js')
@@ -304,5 +304,56 @@ router.post('/sitter-req-accept-status', async (req, res, next) => {
 
 })
 
+router.use('/get-info-booked',auth)
+router.get('/get-info-booked', async(req,res,next)=>{
+    try {
+        const sitter_Id = req.user._id
+        
+        if(sitter_Id)
+        {
+            const getInfoBooked = await petowner_request.find({
+                $and:[{
+                    receive_sitter_id: sitter_Id,
+                    pet_sitter_accept_status:'accept' 
+                }]
+            })
+    
+            let getInfoBookedArray= []
+    
+            for(let i=0;i<getInfoBooked.length;i++)
+            {
+                const petOwnerId = await user.findById(getInfoBooked[i].pet_owner_sender_id)
+                const petIdExist = await pet.findById(getInfoBooked[i].pet_id)
+    
+                getInfoBookedArray.push({
+                    ownerId:petOwnerId.name,
+                    petImages:petIdExist.images,
+                    petDropOoff:petIdExist.pet_drop_off,
+                    petPickUp:petIdExist.pet_pick_up,
+                    petPurposeType:petIdExist.pet_purpose_type,
+                    petType:petIdExist.pet_type,
+                    petAge:petIdExist.age,
+                })
+            }
+            res.status(200).json({
+                success: true,
+                data: getInfoBookedArray
+            });
+        }
+        
+        else{
+            res.status(200).json({
+                success:false,
+                message:"User Doesn't Exist."
+            })
+        }
+        
+    } catch (error) {
+        res.status(200).json({
+            success: false,
+            message: error.message
+        }); 
+    }
+})
 
 module.exports = router

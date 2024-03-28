@@ -7,7 +7,7 @@ const petrequest = require('../models/petrequest.js')
 const petsitterdetail = require('../models/petsitter_detail.js')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
-const OTP = require("../models/opt.js")
+// const OTP = require("../models/opt.js")
 const nodemailer = require('nodemailer')
 const dotenv = require('dotenv').config({ path: '../../.env' });
 const auth = require('../../middlewares/auth-middleware.js')
@@ -38,7 +38,7 @@ router.post('/add-pet', upload.array('images', 5), async (req, res, next) => {
         if (!existingUser) {
             res.status(200).json
                 ({
-                    success: "false",
+                    success: false,
                     message: "User not found."
                 });
         }
@@ -79,7 +79,7 @@ router.post('/add-pet', upload.array('images', 5), async (req, res, next) => {
             }
 
             res.status(200).json({
-                success: "true",
+                success: true,
                 message: "Pet Added Successfully."
             });
         }
