@@ -17,21 +17,30 @@ router.use('/add-favorite',auth)
 router.post('/add-favorite',async (req,res,next)=>{
 
     const findUser = await user.findOne(req.user._id)
-
+    const {petId, petOwner_id} = req.body;
     try {
-        const newFavorite = new favorite({
-            _id: new mongoose.Types.ObjectId(),
-            petId:req.body.petId,
-            petOwner_id:req.body.petOwner_id,
-            userId:findUser._id
-        })
-
-        await newFavorite.save();
-
-        res.status(200).json({
-            success:true,
-            message:"Added To Favorite Pet's."
-        })
+        const favoriteExist = await favorite.findOne({userId: findUser._id, petId: petId})
+        if(favoriteExist){
+            res.status(200).json({
+                success: false,
+                message: "This pet is already in your favourites."
+            })
+        }
+        else{
+            const newFavorite = new favorite({
+                _id: new mongoose.Types.ObjectId(),
+                petId: petId,
+                petOwner_id: petOwner_id,
+                userId:findUser._id
+            })
+    
+            await newFavorite.save();
+    
+            res.status(200).json({
+                success:true,
+                message:"Added To Favorite Pet's."
+            })
+        }
     } 
     
     catch (error) {

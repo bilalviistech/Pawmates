@@ -14,6 +14,18 @@ const PetOwnerRequestSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+    pet_service: {
+        type: String,
+        required: true
+    },
+    start_date: {
+        type: String,
+        required: true 
+    },
+    end_date: {
+        type: String,
+        required: true 
+    },
     pet_owner_request_send:{
         type:String,
         required:true,

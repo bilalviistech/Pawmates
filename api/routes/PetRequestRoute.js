@@ -16,6 +16,8 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const petsitter_detail = require('../models/petsitter_detail.js')
+const schedule = require('../models/schedule.js')
+const moment = require('moment');
 
 // Pet Sitter Request Send
 router.use('/req-send', auth)
@@ -75,14 +77,11 @@ router.post('/req-send', async (req, res, next) => {
 router.use('/owner-req-send', auth)
 router.post('/owner-req-send', async (req, res, next) => {
     try {
-        const petId = req.body.pet_id
-        const SitterId = req.body.receive_sitter_id
+        const {pet_id, receive_sitter_id, start_date, end_date, pet_service} = req.body
 
-        const existOwner_request = await petowner_request.findOne({ pet_id: petId, receive_sitter_id: SitterId })
+        const existOwner_request = await petowner_request.findOne({ pet_id: pet_id, receive_sitter_id: receive_sitter_id })
 
         if (existOwner_request) {
-            // console.log("if")
-            // return
             res.status(200).json({
                 success: false,
                 message: "Request Already Sent."
@@ -90,22 +89,70 @@ router.post('/owner-req-send', async (req, res, next) => {
         }
 
         else {
-            // console.log("else")
-            // return
-            const petOwnerReq = new petowner_request({
-                _id: new mongoose.Types.ObjectId(),
-                pet_id:petId,
-                pet_owner_sender_id:req.user._id,
-                receive_sitter_id:SitterId
-            })
+            const datesInRange = [];
+            let startDate = moment(start_date).clone();
+            
+            while (startDate.isSameOrBefore(moment(end_date), 'day')) {
+                datesInRange.push(startDate.format('YYYY-MM-DD'));
+                startDate.add(1, 'day');
+            }
 
-            await petOwnerReq.save();
+            const SitterSchedule = await schedule.find({petSitterId: receive_sitter_id})
 
-            res.status(200).json({
-                success: true,
-                message: "Request Sent Successfully."
-            });
-
+            if(SitterSchedule.length > 0){
+                let index = -1; // Default value if no match is found
+                // console.log(index)
+                for (let i = 0; i < datesInRange.length; i++) {
+                    const date = datesInRange[i];
+                    const foundIndex = SitterSchedule.findIndex(schedule => schedule.date === date && schedule.dayOff === true);
+                    if (foundIndex === 0) {
+                        index = 0;
+                        break; // Break the loop if a match is found
+                    }
+                }
+                if(index === 0){
+                    res.status(200).json({
+                        success: false,
+                        message: "Pet sitter has taken a few days off in the range you have selected."
+                    });
+                }
+                else{
+                    const petOwnerReq = new petowner_request({
+                        _id: new mongoose.Types.ObjectId(),
+                        pet_id:pet_id,
+                        pet_owner_sender_id:req.user._id,
+                        receive_sitter_id:receive_sitter_id,
+                        pet_service:pet_service,
+                        start_date:start_date,
+                        end_date:end_date,
+                    })
+        
+                    await petOwnerReq.save();
+        
+                    res.status(200).json({
+                        success: true,
+                        message: "Request Sent Successfully."
+                    });
+                }
+            }
+            else{
+                const petOwnerReq = new petowner_request({
+                    _id: new mongoose.Types.ObjectId(),
+                    pet_id:pet_id,
+                    pet_owner_sender_id:req.user._id,
+                    receive_sitter_id:receive_sitter_id,
+                    pet_service:pet_service,
+                    start_date:start_date,
+                    end_date:end_date,
+                })
+    
+                await petOwnerReq.save();
+    
+                res.status(200).json({
+                    success: true,
+                    message: "Request Sent Successfully."
+                });
+            }
         }
     }
 
@@ -152,6 +199,9 @@ router.get('/reqinfo-petsitter', async (req, res, next) => {
                 _id:reqinfo_petsitter[i]._id,
                 pet_id:reqinfo_petsitter[i].pet_id,
                 pet_nickname:PetInfo.pet_nickname,
+                pet_service:reqinfo_petsitter[i].pet_service,
+                start_date:reqinfo_petsitter[i].start_date,
+                end_date:reqinfo_petsitter[i].end_date,
                 pet_age:PetInfo.age,
                 pet_images:PetInfo.images,
                 pet_size:PetInfo.pet_size,
@@ -355,5 +405,11 @@ router.get('/get-info-booked', async(req,res,next)=>{
         }); 
     }
 })
+
+     // const indexes = datesInRange.map(date => {
+            //     // Find the index of the date in SitterSchedule
+            //     const index = SitterSchedule.findIndex(schedule => schedule.date === date);
+            //     return index;
+            // });
 
 module.exports = router

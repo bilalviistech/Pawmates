@@ -29,14 +29,22 @@ router.post('/register',upload.single('profileImage'),async (req,res,next)=>{
 
     const check_email = req.body.email
     try 
-    {
-        const existingUser = await user.findOne({ email: check_email });
+    {   
+        const username = req.body.name
+        const existingUserEmail = await user.findOne({email: check_email});
+        const existingUserName = await user.findOne({name: username});
         const {user_type} = req.body;
-        if (existingUser) 
+        if (existingUserEmail) 
         {
-            res.status(200).json({
+            return res.status(200).json({
                 success:false,
                 message: "Email Already Exists."
+            });
+        } 
+        if(existingUserName){
+            return res.status(200).json({
+                success:false,
+                message: "Username Already Exists."
             });
         }
         else
@@ -59,7 +67,8 @@ router.post('/register',upload.single('profileImage'),async (req,res,next)=>{
 
             res.status(200).json({
                 success: true,
-                message: "User Created"
+                message: "User Created",
+                _id: newUser._id
             });
         }
     } catch (err) {

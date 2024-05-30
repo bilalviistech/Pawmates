@@ -14,7 +14,7 @@ const PetSchema = new mongoose.Schema({
     pet_purpose_type:{
         enum: ['boarding', 'house sitting', 'drop in visit', 'pet day care', 'pet walking'],
         type:String,
-        required:true
+        // required:true
     },
     location:{
         type:{
@@ -25,11 +25,11 @@ const PetSchema = new mongoose.Schema({
     },
     pet_drop_off:{
         type:String,
-        required:true
+        // required:true
     },
     pet_pick_up:{
         type:String,
-        required:true
+        // required:true
     },
     gender:{
         type:String,
