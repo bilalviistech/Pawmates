@@ -9,6 +9,7 @@ const PetRequestRoute = require('./api/routes/PetRequestRoute.js')
 const FavoriteRoute = require('./api/routes/FavoriteRoute.js')
 const GalleryRoute = require('./api/routes/GalleryRoute.js')
 const ScheduleRoute = require('./api/routes/ScheduleRoute.js')
+const ChatRoute = require('./api/routes/ChatRoute.js')
 const io = require('./server.js')
 db()    
 
@@ -23,6 +24,7 @@ app.use('/pet',PetRequestRoute)
 app.use('/pet',FavoriteRoute)
 app.use('/gallery',GalleryRoute)
 app.use('/schedule',ScheduleRoute)
+app.use('/chat',ChatRoute)
 app.use('/uploads', express.static('uploads'));
 app.use('/gallery', express.static('gallery'));
 
