@@ -3,16 +3,19 @@ const mongoose = require('mongoose')
 const PetOwnerRequestSchema = new mongoose.Schema({
     _id:mongoose.Schema.Types.ObjectId,
     pet_id:{
-        type:String,
-        required:true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Pet', // Reference to the User model
+        required: true
     },
     pet_owner_sender_id:{
-        type:String,
-        required:true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Reference to the User model
+        required: true
     },
     receive_sitter_id:{
-        type:String,
-        required:true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Reference to the User model
+        required: true
     },
     pet_service: {
         type: String,
