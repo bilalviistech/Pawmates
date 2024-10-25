@@ -138,6 +138,117 @@ router.post('/login', (req,res,next)=>{
     })
 })
 
+// User Social Auth
+router.post('/social-auth', async (req, res, next) => {
+    const { username, email, user_type, profileImageURL } = req.body
+        try {
+
+            const existingUserName = await user.findOne({name: username});
+
+            if(existingUserName){
+                return res.status(200).json({
+                    success:false,
+                    message: "Username Already Exists."
+                });
+            }
+
+            const UserExist = await user.findOne({email, email})
+            var fullUrl = req.protocol + '://' + req.get('host') + '/uploads/';
+            if(UserExist)
+            {
+                bcrypt.compare('123456789', UserExist.password, (err, result) => {
+                    if (result) {
+                        const token = jwt.sign({
+                            id: UserExist._id,
+                            name: UserExist.name,
+                            email: UserExist.email,
+                            user_type: UserExist.user_type
+                        },
+                        "bafhsd7asu45TX0dbsa8dy98wsdj98",{
+                            expiresIn: "365d"
+                        })
+                        res.status(200).json({
+                            success:true,
+                            path: fullUrl,
+                            data: {
+                                id:UserExist.id,
+                                name:UserExist.name,
+                                email:UserExist.email,
+                                user_type:UserExist.user_type,
+                                profileImage:UserExist.profileImage,
+                                emailVerify:UserExist.emailVerify,
+                                pet_add_status:UserExist.pet_add_status,
+                                petSitter_update_status:UserExist.petSitter_update_status,
+                                token:token
+                            },
+                        });
+                    }
+                    else {
+                        res.status(200).json({
+                            success: false,
+                            message: "Password doesn't match."
+                        })
+                    }
+                })
+                 
+            }
+            else
+            {
+                const salt = await bcrypt.genSalt(10);
+                const hash = await bcrypt.hash('123456789', salt);
+    
+                const newUser = new user({
+                    _id: new mongoose.Types.ObjectId(),
+                    name: username,
+                    email: email,
+                    password: hash,
+                    user_type: user_type,
+                    profileImage: profileImageURL
+                });
+                await newUser.save();
+    
+                if(newUser){
+    
+                    const token = jwt.sign({
+                        id: newUser._id,
+                        name: newUser.name,
+                        email: newUser.email,
+                        user_type: newUser.user_type
+                    },
+                    "bafhsd7asu45TX0dbsa8dy98wsdj98",{
+                        expiresIn: "365d"
+                    })
+                    res.status(200).json({
+                        success:true,
+                        path: fullUrl,
+                        data: {
+                            id:newUser.id,
+                            name:newUser.name,
+                            email:newUser.email,
+                            user_type:newUser.user_type,
+                            profileImage:newUser.profileImage,
+                            emailVerify:newUser.emailVerify,
+                            pet_add_status:newUser.pet_add_status,
+                            petSitter_update_status:newUser.petSitter_update_status,
+                            token:token
+                        },
+                    });
+                }
+                else{
+                    res.status(200).json({
+                        success: false,
+                        message: "Something went wrong."
+                    });
+                }
+            }
+        } catch (error) {
+            res.status(200).json({
+                success: false,
+                message: error.message
+            });
+        }
+})
+
 // User Change Password Using Auth Token
 router.use('/update-password',auth)
 router.post('/update-password', async (req,res,next)=>{
